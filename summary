@@ -1,0 +1,85 @@
+sum.tab<-function(dat,exclude.var,dir.output){
+  
+  ##Argument for function
+  ##dat: A data.frame where categorical variables are defined as factors and continuous variables are non-factors
+  ##exclude.var: A vector of the column names which we do not want to perform summary statistics on.
+  ##dir.output: A string indicting the directory to save the summary tables.
+  ##
+  ##Example:
+  ##set.seed(1234)
+  ##n=100
+  ##dat<-data.frame(Cohort=rep("Testing",n),
+  ##                studyid=1:n,age=rnorm(n,mean=50,sd=5),bmi=c(NA,NA,rnorm(n-2,mean=20,sd=1)),
+  ##                gender=factor(c(rep(c("Female","Male"),(n-2)/2),NA,NA)),
+  ##                eth=factor(rep(c("Chinese","Malay","Indian","Others"),n/4)))
+  ##summary(dat)
+  ##sum.tab(dat,c("Cohort","studyid"),"D:/DM")
+  
+  ##Indice of variables into the summary statistics table
+  id.var<-which(!(colnames(dat)%in%exclude.var))
+  
+  ##Indice of variables corresponding to factors
+  id.cat<-which(sapply(dat[,id.var],is.factor))
+  
+  ##Generate counts and percent for factors
+  if(length(id.cat)!=0){
+    sum.cat<-NULL
+    for(i in id.var[id.cat]){
+      
+      tmp<-as.data.frame(table(dat[,i]))
+      tmp<-cbind(tmp,Percent=tmp[,2]/sum(tmp[,2])*100)
+      n.na<-sum(is.na(dat[,i]))
+      if(n.na>0){
+        tmp<-rbind(tmp,data.frame(Var1="NA",Freq=n.na,Percent=NA))
+      }
+      tmp<-cbind(Variable=c(colnames(dat)[i],rep(NA,nrow(tmp)-1)),tmp)
+      
+      sum.cat<-rbind(sum.cat,tmp)
+      
+    }
+    colnames(sum.cat)[which(colnames(sum.cat)=="Var1")]<-"Level"
+    
+  }else{
+    sum.cat<-data.frame(Variable=NA,
+                        Level=NA,
+                        Freq=NA,
+                        Percent=NA)
+  }
+  
+  
+  ##Generate mean and sd for non-factors (i.e., continuous)
+  if(length(id.cat)!=length(id.var)){
+    
+    if(length(id.cat)!=0){
+      id.cts<-c(1:length(id.var))[-id.cat]
+    }else{
+      id.cts<-c(1:length(id.var))
+    }
+    
+    sum.cts<-NULL
+    for(i in id.var[id.cts]){
+      
+      tmp<-data.frame(Variable=colnames(dat)[i],
+                      Level=NA,
+                      Mean=mean(dat[,i],na.rm=TRUE),
+                      SD=sd(dat[,i],na.rm=TRUE))
+      
+      sum.cts<-rbind(sum.cts,tmp)
+      
+    }
+    
+  }else{
+    sum.cts<-data.frame(Variable=NA,
+                        Level=NA,
+                        Mean=NA,
+                        SD=NA)
+  }
+  
+  write.csv(sum.cat,file=paste(dir.output,"/sum.cat.csv",sep=""),
+            row.names=FALSE,na = "")
+  write.csv(sum.cts,file=paste(dir.output,"/sum.cts.csv",sep=""),
+            row.names=FALSE,na = "")
+  
+  return(list(sum.cat=sum.cat,sum.cts=sum.cts))
+  
+}
