@@ -1,0 +1,23 @@
+model{
+  for(i in 1:N){
+    Case[1,i]~dpois(exp(r[1,i]))
+    Case[2,i]~dpois(exp(r[2,i]))
+    Case[3,i]~dpois(exp(r[3,i]))
+    Cancer_case[i]~dsum(Case[1,i],Case[2,i],Case[3,i])
+ #Cancer_case[i]~dpois(exp(r[1,i])+exp(r[2,i])+exp(r[3,i]))
+    #baseline rate non-smoker    
+    r[1,i]<-log(Never[i])+a1+b1*Malay[i]+b2*Indian[i]+b3*Age[i]
+    #rate smoker
+    r[2,i]<-log(Current[i])+a1+exp(a3)+exp(a2)+b1*Malay[i]+b2*Indian[i]+b3*Age[i]
+    #rate ex-smoker
+    r[3,i]<-log(Ex[i])+a1+exp(a3)+b1*Malay[i]+b2*Indian[i]+b3*Age[i]
+    }
+    b1~dunif(-100,100)
+    b2~dunif(-100,100)
+    b3~dunif(-100,100)
+    a1~dunif(-20,20)
+    a2~dunif(-2,2)
+    a3~dunif(-2,2)
+
+}
+
